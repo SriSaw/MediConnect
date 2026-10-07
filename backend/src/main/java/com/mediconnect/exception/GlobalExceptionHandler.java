@@ -3,9 +3,11 @@ package com.mediconnect.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -19,6 +21,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Centralized exception handler providing unified error mapping and consistent HTTP responses.
+ * Demonstrates OOP polymorphism by catching the base MediConnectException hierarchy while
+ * specifically translating web, validation, JSON deserialization, and database errors.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -30,7 +37,7 @@ public class GlobalExceptionHandler {
         log.warn("Resource not found: {} on path {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
-                "RESOURCE_NOT_FOUND",
+                ex.getErrorCode(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -43,7 +50,7 @@ public class GlobalExceptionHandler {
         log.warn("Bad request: {} on path {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
-                "BAD_REQUEST",
+                ex.getErrorCode(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -56,7 +63,7 @@ public class GlobalExceptionHandler {
         log.warn("Conflict: {} on path {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                "CONFLICT",
+                ex.getErrorCode(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -69,7 +76,7 @@ public class GlobalExceptionHandler {
         log.warn("Forbidden access: {} on path {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
-                "FORBIDDEN",
+                ex.getErrorCode(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -82,11 +89,55 @@ public class GlobalExceptionHandler {
         log.warn("Unauthorized access: {} on path {}", ex.getMessage(), request.getRequestURI());
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
-                "UNAUTHORIZED",
+                ex.getErrorCode(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DatabaseOperationException.class)
+    public ResponseEntity<ErrorResponse> handleDatabaseOperationException(
+            DatabaseOperationException ex, HttpServletRequest request) {
+        log.error("Database operation failed on path {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                ex.getErrorCode(),
+                "A database persistence error occurred while processing the request.",
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(MediConnectException.class)
+    public ResponseEntity<ErrorResponse> handleMediConnectException(
+            MediConnectException ex, HttpServletRequest request) {
+        log.warn("Domain exception on path {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse response = new ErrorResponse(
+                ex.getStatus().value(),
+                ex.getErrorCode(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(response, ex.getStatus());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Malformed HTTP message or JSON parsing error on path {}: {}", request.getRequestURI(), ex.getMessage());
+        String userFriendlyMsg = "Malformed request payload or invalid date/time format. Please check your input parameters.";
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause != null && cause.getMessage() != null && !cause.getMessage().isBlank()) {
+            userFriendlyMsg = "Invalid input: " + cause.getMessage().split(";")[0];
+        }
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "MALFORMED_REQUEST",
+                userFriendlyMsg,
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -157,6 +208,19 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(
+            DataAccessException ex, HttpServletRequest request) {
+        log.error("JDBC/Database access failure on path {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "DATABASE_ACCESS_ERROR",
+                "A database error occurred while executing the operation. Please try again later.",
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

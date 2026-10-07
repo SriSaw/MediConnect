@@ -27,6 +27,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.mediconnect.admin.repository.AnalyticsRepository;
+
 @Service
 public class AdminService {
 
@@ -36,6 +38,7 @@ public class AdminService {
     private final AppointmentRepository appointmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final AnalyticsRepository analyticsRepository;
 
     public AdminService(
             UserRepository userRepository,
@@ -43,7 +46,8 @@ public class AdminService {
             ProfessionalProfileRepository professionalProfileRepository,
             AppointmentRepository appointmentRepository,
             PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            AnalyticsRepository analyticsRepository
     ) {
         this.userRepository = userRepository;
         this.patientProfileRepository = patientProfileRepository;
@@ -51,6 +55,7 @@ public class AdminService {
         this.appointmentRepository = appointmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
+        this.analyticsRepository = analyticsRepository;
     }
 
     @Transactional(readOnly = true)
@@ -193,28 +198,7 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public AnalyticsOverviewResponse getAnalyticsOverview() {
-        long totalUsers = userRepository.count();
-        long totalPatients = userRepository.countByRole(Role.PATIENT);
-        long totalProfessionals = userRepository.countByRole(Role.HEALTHCARE_PROFESSIONAL);
-        long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
-
-        long totalAppointments = appointmentRepository.count();
-        long completedAppointments = appointmentRepository.countByStatus(AppointmentStatus.COMPLETED);
-        long cancelledAppointments = appointmentRepository.countByStatus(AppointmentStatus.CANCELLED);
-        long pendingAppointments = appointmentRepository.countByStatus(AppointmentStatus.PENDING) +
-                appointmentRepository.countByStatus(AppointmentStatus.CONFIRMED);
-        long todayAppointments = appointmentRepository.countByAppointmentDate(LocalDate.now());
-
-        return new AnalyticsOverviewResponse(
-                totalUsers,
-                totalPatients,
-                totalProfessionals,
-                activeUsers,
-                totalAppointments,
-                completedAppointments,
-                cancelledAppointments,
-                pendingAppointments,
-                todayAppointments
-        );
+        // Leverages JDBC-backed aggregated SQL implementation via AnalyticsRepository abstraction
+        return analyticsRepository.getOverview();
     }
 }

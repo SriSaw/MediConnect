@@ -1,7 +1,6 @@
 package com.mediconnect.professional.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.mediconnect.professional.Availability;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.DayOfWeek;
@@ -12,11 +11,11 @@ public record AvailabilityRequest(
         DayOfWeek dayOfWeek,
 
         @NotNull(message = "Start time is required")
-        @JsonFormat(pattern = "HH:mm")
+        @JsonFormat(pattern = "HH:mm[:ss]")
         LocalTime startTime,
 
         @NotNull(message = "End time is required")
-        @JsonFormat(pattern = "HH:mm")
+        @JsonFormat(pattern = "HH:mm[:ss]")
         LocalTime endTime,
 
         Boolean available

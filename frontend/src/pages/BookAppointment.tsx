@@ -48,8 +48,8 @@ export const BookAppointment: React.FC = () => {
       await appointmentService.book({
         professionalId: professional.id,
         appointmentDate: selectedDate,
-        startTime: startTime + (startTime.length === 5 ? ':00' : ''),
-        endTime: endTime + (endTime.length === 5 ? ':00' : ''),
+        startTime: startTime.slice(0, 5),
+        endTime: endTime.slice(0, 5),
         reason: reason.trim(),
       });
       setSuccess(true);
@@ -87,7 +87,7 @@ export const BookAppointment: React.FC = () => {
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <span className="text-xs font-semibold uppercase text-teal-600 tracking-wider">Book Consultation</span>
-          <h1 className="text-2xl font-bold text-slate-800">{professional.name}</h1>
+          <h1 className="text-2xl font-bold text-slate-800">{professional.name || (professional as any).user?.name || 'Healthcare Professional'}</h1>
           <p className="text-slate-500 text-sm mt-1">{professional.specialization}</p>
         </div>
         <div className="text-right">

@@ -92,7 +92,7 @@ export const PatientProfilePage: React.FC = () => {
               <input
                 type="text"
                 disabled
-                value={profile?.userName || ''}
+                value={profile?.userName || (profile as any)?.user?.name || ''}
                 className="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-lg text-sm text-slate-500 cursor-not-allowed"
               />
             </div>
@@ -101,7 +101,7 @@ export const PatientProfilePage: React.FC = () => {
               <input
                 type="email"
                 disabled
-                value={profile?.email || ''}
+                value={profile?.email || (profile as any)?.user?.email || ''}
                 className="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-lg text-sm text-slate-500 cursor-not-allowed"
               />
             </div>

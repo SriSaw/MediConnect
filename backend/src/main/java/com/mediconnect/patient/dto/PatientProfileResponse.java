@@ -1,5 +1,6 @@
 package com.mediconnect.patient.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mediconnect.patient.PatientProfile;
 import com.mediconnect.user.dto.UserResponse;
 
@@ -32,5 +33,25 @@ public record PatientProfileResponse(
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
         );
+    }
+
+    @JsonProperty("userId")
+    public Long getUserId() {
+        return user != null ? user.id() : null;
+    }
+
+    @JsonProperty("userName")
+    public String getUserName() {
+        return user != null ? user.name() : null;
+    }
+
+    @JsonProperty("email")
+    public String getEmail() {
+        return user != null ? user.email() : null;
+    }
+
+    @JsonProperty("phone")
+    public String getPhone() {
+        return user != null ? user.phone() : null;
     }
 }

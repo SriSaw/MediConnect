@@ -97,7 +97,7 @@ export const DoctorProfilePage: React.FC = () => {
               <input
                 type="text"
                 disabled
-                value={profile?.name || ''}
+                value={profile?.name || (profile as any)?.user?.name || ''}
                 className="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-lg text-sm text-slate-500 cursor-not-allowed"
               />
             </div>

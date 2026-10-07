@@ -14,9 +14,12 @@ public class AuditLogService {
     private static final Logger log = LoggerFactory.getLogger(AuditLogService.class);
 
     private final AuditLogRepository auditLogRepository;
+    private final AuditLogQueryRepository auditLogQueryRepository;
 
-    public AuditLogService(AuditLogRepository auditLogRepository) {
+    public AuditLogService(AuditLogRepository auditLogRepository,
+                           AuditLogQueryRepository auditLogQueryRepository) {
         this.auditLogRepository = auditLogRepository;
+        this.auditLogQueryRepository = auditLogQueryRepository;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -33,7 +36,12 @@ public class AuditLogService {
 
     @Transactional(readOnly = true)
     public PageResponse<AuditLogResponse> getAuditLogs(Pageable pageable) {
-        return PageResponse.from(auditLogRepository.findAllByOrderByTimestampDesc(pageable)
-                .map(AuditLogResponse::from));
+        // Delegates to JDBC-backed query repository implementing AuditLogQueryRepository
+        return auditLogQueryRepository.findAuditLogs(null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AuditLogResponse> getAuditLogs(String action, String resourceType, Pageable pageable) {
+        return auditLogQueryRepository.findAuditLogs(action, resourceType, pageable);
     }
 }

@@ -18,11 +18,11 @@ public record CreateAppointmentRequest(
         LocalDate appointmentDate,
 
         @NotNull(message = "Start time is required")
-        @JsonFormat(pattern = "HH:mm")
+        @JsonFormat(pattern = "HH:mm[:ss]")
         LocalTime startTime,
 
         @NotNull(message = "End time is required")
-        @JsonFormat(pattern = "HH:mm")
+        @JsonFormat(pattern = "HH:mm[:ss]")
         LocalTime endTime,
 
         @NotBlank(message = "Reason for appointment is required")

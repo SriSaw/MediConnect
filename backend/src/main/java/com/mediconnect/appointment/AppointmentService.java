@@ -50,6 +50,7 @@ public class AppointmentService {
     private final AvailabilityRepository availabilityRepository;
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
+    private final com.mediconnect.appointment.repository.AppointmentReportRepository appointmentReportRepository;
 
     public AppointmentService(
             AppointmentRepository appointmentRepository,
@@ -57,7 +58,8 @@ public class AppointmentService {
             ProfessionalProfileRepository professionalProfileRepository,
             AvailabilityRepository availabilityRepository,
             NotificationService notificationService,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            com.mediconnect.appointment.repository.AppointmentReportRepository appointmentReportRepository
     ) {
         this.appointmentRepository = appointmentRepository;
         this.patientProfileRepository = patientProfileRepository;
@@ -65,9 +67,10 @@ public class AppointmentService {
         this.availabilityRepository = availabilityRepository;
         this.notificationService = notificationService;
         this.auditLogService = auditLogService;
+        this.appointmentReportRepository = appointmentReportRepository;
     }
 
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Transactional
     public AppointmentResponse bookAppointment(UserPrincipal currentUser, CreateAppointmentRequest request) {
         // 1. Resolve patient
         PatientProfile patient = patientProfileRepository.findByUserId(currentUser.getId())
@@ -287,5 +290,25 @@ public class AppointmentService {
     public PageResponse<AppointmentResponse> getAllAppointments(AppointmentStatus status, LocalDate date, Pageable pageable) {
         Page<Appointment> page = appointmentRepository.findAllWithFilters(status, date, pageable);
         return PageResponse.from(page.map(AppointmentResponse::from));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<com.mediconnect.appointment.dto.AppointmentReportResponse> searchAppointmentReports(
+            AppointmentStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            Long professionalId,
+            Long patientId,
+            Pageable pageable
+    ) {
+        // Leverages JDBC-backed query repository implementing AppointmentReportRepository
+        return appointmentReportRepository.searchAppointments(
+                status, startDate, endDate, professionalId, patientId, pageable
+        );
+    }
+
+    public int batchUpdateAppointmentStatus(List<Long> appointmentIds, AppointmentStatus targetStatus, Long actorUserId) {
+        // Executes low-level transactional batch update via JDBC
+        return appointmentReportRepository.batchUpdateStatusInTransaction(appointmentIds, targetStatus, actorUserId);
     }
 }

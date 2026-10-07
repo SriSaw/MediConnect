@@ -103,4 +103,20 @@ public class AppointmentController {
         String reason = request != null ? request.reason() : null;
         return ResponseEntity.ok(appointmentService.cancelAppointment(currentUser, id, reason));
     }
+
+    @GetMapping("/admin/appointments/reports")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Admin: JDBC-powered detailed appointment reporting with multi-table joins and filtering")
+    public ResponseEntity<PageResponse<com.mediconnect.appointment.dto.AppointmentReportResponse>> getAppointmentReports(
+            @RequestParam(required = false) AppointmentStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) Long professionalId,
+            @RequestParam(required = false) Long patientId,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ResponseEntity.ok(appointmentService.searchAppointmentReports(
+                status, startDate, endDate, professionalId, patientId, pageable
+        ));
+    }
 }

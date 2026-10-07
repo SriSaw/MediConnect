@@ -133,10 +133,12 @@ public class AdminController {
     }
 
     @GetMapping("/audit-logs")
-    @Operation(summary = "List system audit logs with pagination")
+    @Operation(summary = "List system audit logs with pagination and optional filtering")
     public ResponseEntity<PageResponse<AuditLogResponse>> getAuditLogs(
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String resourceType,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(auditLogService.getAuditLogs(pageable));
+        return ResponseEntity.ok(auditLogService.getAuditLogs(action, resourceType, pageable));
     }
 }

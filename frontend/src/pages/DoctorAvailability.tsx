@@ -49,8 +49,8 @@ export const DoctorAvailability: React.FC = () => {
     try {
       await professionalService.addAvailability({
         dayOfWeek,
-        startTime: startTime + (startTime.length === 5 ? ':00' : ''),
-        endTime: endTime + (endTime.length === 5 ? ':00' : ''),
+        startTime: startTime.slice(0, 5),
+        endTime: endTime.slice(0, 5),
         available: true,
       });
       setSuccess('Availability slot successfully added!');

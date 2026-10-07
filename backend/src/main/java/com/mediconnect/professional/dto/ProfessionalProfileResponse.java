@@ -1,5 +1,6 @@
 package com.mediconnect.professional.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mediconnect.professional.ProfessionalProfile;
 import com.mediconnect.user.dto.UserResponse;
 
@@ -34,5 +35,25 @@ public record ProfessionalProfileResponse(
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
         );
+    }
+
+    @JsonProperty("userId")
+    public Long getUserId() {
+        return user != null ? user.id() : null;
+    }
+
+    @JsonProperty("name")
+    public String getName() {
+        return user != null ? user.name() : null;
+    }
+
+    @JsonProperty("email")
+    public String getEmail() {
+        return user != null ? user.email() : null;
+    }
+
+    @JsonProperty("phone")
+    public String getPhone() {
+        return user != null ? user.phone() : null;
     }
 }

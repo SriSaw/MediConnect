@@ -101,7 +101,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/professionals", "/api/professionals/*", "/api/professionals/*/availability").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api-docs/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info", "/api/system/**").permitAll()
 
                         // Role-specific endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

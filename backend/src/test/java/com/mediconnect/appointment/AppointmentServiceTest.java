@@ -57,6 +57,9 @@ class AppointmentServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private com.mediconnect.appointment.repository.AppointmentReportRepository appointmentReportRepository;
+
     private AppointmentService appointmentService;
 
     private User patientUser;
@@ -73,7 +76,8 @@ class AppointmentServiceTest {
                 professionalProfileRepository,
                 availabilityRepository,
                 notificationService,
-                auditLogService
+                auditLogService,
+                appointmentReportRepository
         );
 
         patientUser = new User("Alex", "patient@test.local", "hash", null, Role.PATIENT, UserStatus.ACTIVE);
