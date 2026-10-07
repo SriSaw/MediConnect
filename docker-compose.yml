@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mediconnect-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mediconnect}
+      POSTGRES_USER: ${POSTGRES_USER:-mediconnect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password must be set via POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-mediconnect} -d $${POSTGRES_DB:-mediconnect}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mediconnect-backend
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-mediconnect}
+      DB_USERNAME: ${DB_USERNAME:-mediconnect}
+      DB_PASSWORD: ${DB_PASSWORD:?Backend database password must be set via DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT secret must be set via JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:5173,http://localhost:80,http://frontend}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mediconnect-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

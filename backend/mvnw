@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e
+
+# If maven is installed at /tmp/maven or on PATH
+if [ -x "/tmp/maven/bin/mvn" ]; then
+    exec /tmp/maven/bin/mvn "$@"
+elif command -v mvn >/dev/null 2>&1; then
+    exec mvn "$@"
+elif [ -x "/home/saw/tools/apache-maven-3.9.9/bin/mvn" ]; then
+    exec /home/saw/tools/apache-maven-3.9.9/bin/mvn "$@"
+else
+    echo "Error: Maven not found." >&2
+    exit 1
+fi
