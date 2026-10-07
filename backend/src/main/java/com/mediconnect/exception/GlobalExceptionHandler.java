@@ -186,11 +186,13 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        log.warn("Validation error on path {}: {}", request.getRequestURI(), errors);
+        String details = errors.isEmpty()
+                ? "Validation failed for one or more fields"
+                : String.join("; ", errors.values());
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "VALIDATION_ERROR",
-                "Validation failed for one or more fields",
+                details,
                 request.getRequestURI(),
                 errors
         );

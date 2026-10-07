@@ -20,4 +20,14 @@ public record ErrorResponse(
     public ErrorResponse(int status, String error, String message, String path, Map<String, String> validationErrors) {
         this(Instant.now(), status, error, message, path, validationErrors);
     }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("errorCode")
+    public String getErrorCode() {
+        return error;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("errors")
+    public Map<String, String> getErrors() {
+        return validationErrors;
+    }
 }

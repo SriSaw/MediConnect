@@ -90,6 +90,23 @@ export interface Appointment {
   updatedAt: string;
 }
 
+export interface AppointmentReport {
+  id: number;
+  patientId: number;
+  patientName: string;
+  patientEmail: string;
+  professionalId: number;
+  professionalName: string;
+  specialization: string;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  reason: string;
+  consultationFee: number;
+  createdAt: string;
+}
+
 export interface Consultation {
   id: number;
   appointmentId: number;

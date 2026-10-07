@@ -6,6 +6,7 @@ import {
   ProfessionalProfile,
   Availability,
   Appointment,
+  AppointmentReport,
   Consultation,
   MedicalRecord,
   Notification,
@@ -115,6 +116,18 @@ export const appointmentService = {
   },
   getAdminAppointments: async (params?: { status?: string; date?: string; page?: number; size?: number }): Promise<PageResponse<Appointment>> => {
     const res = await api.get<PageResponse<Appointment>>('/admin/appointments', { params });
+    return res.data;
+  },
+  getAppointmentReports: async (params?: {
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    professionalId?: number;
+    patientId?: number;
+    page?: number;
+    size?: number;
+  }): Promise<PageResponse<AppointmentReport>> => {
+    const res = await api.get<PageResponse<AppointmentReport>>('/admin/appointments/reports', { params });
     return res.data;
   },
   adminCancel: async (id: number, reason?: string): Promise<Appointment> => {

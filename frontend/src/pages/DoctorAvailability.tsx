@@ -18,7 +18,7 @@ export const DoctorAvailability: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // New slot form
-  const [dayOfWeek, setDayOfWeek] = useState('MONDAY');
+  const [dayOfWeek, setDayOfWeek] = useState('SATURDAY');
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [saving, setSaving] = useState(false);
@@ -30,6 +30,13 @@ export const DoctorAvailability: React.FC = () => {
     try {
       const data = await professionalService.getMyAvailability();
       setAvailabilities(data);
+
+      // If current selected day already has schedules, suggest first free day
+      const existingDays = new Set(data.map((a) => a.dayOfWeek));
+      const firstFreeDay = DAYS.find((d) => !existingDays.has(d as any));
+      if (firstFreeDay) {
+        setDayOfWeek(firstFreeDay);
+      }
     } catch {
       setAvailabilities([]);
     } finally {
@@ -45,6 +52,13 @@ export const DoctorAvailability: React.FC = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    // Pre-validate start vs end
+    if (startTime >= endTime) {
+      setError(`Start time (${startTime}) must be strictly before end time (${endTime})`);
+      return;
+    }
+
     setSaving(true);
     try {
       await professionalService.addAvailability({
@@ -53,10 +67,25 @@ export const DoctorAvailability: React.FC = () => {
         endTime: endTime.slice(0, 5),
         available: true,
       });
-      setSuccess('Availability slot successfully added!');
+      setSuccess(`Availability slot on ${dayOfWeek} successfully added!`);
       await fetchAvailability();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to add availability');
+      let msg = 'Failed to add availability slot.';
+      if (err.response?.data) {
+        const d = err.response.data;
+        if (d.message && typeof d.message === 'string') {
+          msg = d.message;
+        } else if (d.errors && typeof d.errors === 'object') {
+          const vals = Object.values(d.errors).filter(Boolean);
+          if (vals.length > 0) msg = vals.join('; ');
+        } else if (d.validationErrors && typeof d.validationErrors === 'object') {
+          const vals = Object.values(d.validationErrors).filter(Boolean);
+          if (vals.length > 0) msg = vals.join('; ');
+        }
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -66,9 +95,11 @@ export const DoctorAvailability: React.FC = () => {
     if (!confirm('Are you sure you want to remove this availability window?')) return;
     try {
       await professionalService.deleteAvailability(id);
+      setSuccess('Availability slot removed.');
       await fetchAvailability();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete availability');
+      const msg = err.response?.data?.message || err.message || 'Failed to delete availability';
+      alert(msg);
     }
   };
 
@@ -107,7 +138,10 @@ export const DoctorAvailability: React.FC = () => {
               <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Day of Week</label>
               <select
                 value={dayOfWeek}
-                onChange={(e) => setDayOfWeek(e.target.value)}
+                onChange={(e) => {
+                  setDayOfWeek(e.target.value);
+                  setError('');
+                }}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
               >
                 {DAYS.map((d) => (
@@ -125,7 +159,10 @@ export const DoctorAvailability: React.FC = () => {
                   type="time"
                   required
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => {
+                    setStartTime(e.target.value);
+                    setError('');
+                  }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                 />
               </div>
@@ -135,7 +172,10 @@ export const DoctorAvailability: React.FC = () => {
                   type="time"
                   required
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  onChange={(e) => {
+                    setEndTime(e.target.value);
+                    setError('');
+                  }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                 />
               </div>
@@ -144,7 +184,7 @@ export const DoctorAvailability: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg shadow-sm text-sm disabled:opacity-50"
+              className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg shadow-sm text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? 'Adding...' : 'Add Window'}
             </button>
@@ -177,7 +217,7 @@ export const DoctorAvailability: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleDelete(avail.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                     title="Delete Window"
                   >
                     <Trash2 className="w-4 h-4" />
